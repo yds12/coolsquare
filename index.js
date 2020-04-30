@@ -3,6 +3,12 @@ const ctx = canvas.getContext('2d');
 
 const H = 400;
 const W = 400;
+const TONE_LIM = 40;
+const COLOR = {
+  r: Math.floor(Math.random() * 255),
+  g: Math.floor(Math.random() * 255),
+  b: Math.floor(Math.random() * 255)
+};
 
 canvas.width = W;
 canvas.height = H;
@@ -22,14 +28,26 @@ const squares = [
 function divideRecursive(square){
 }
 
+function getToneComponent(color){
+  newColor = color + (Math.floor(Math.random() * TONE_LIM * 2) - TONE_LIM)
+  if(newColor < 0) newColor = 0;
+  if(newColor > 255) newColor = 255;
+  return newColor;
+}
+
+function getTone(color){
+  return { 
+    r: getToneComponent(color.r),
+    g: getToneComponent(color.g),
+    b: getToneComponent(color.b)
+  };
+}
+
 function render(){
   for(sq of squares){
-    const r = Math.floor(Math.random() * 255);
-    const g = Math.floor(Math.random() * 255);
-    const b = Math.floor(Math.random() * 255);
+    const color = getTone(COLOR);
 
-    ctx.fillStyle = `rgb(${r},${g},${b})`;
-    //ctx.fillRect(...square);
+    ctx.fillStyle = `rgb(${color.r},${color.g},${color.b})`;
     ctx.fillRect(sq.x, sq.y, sq.w, sq.h);
   }
 }
