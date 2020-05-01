@@ -7,12 +7,12 @@ testDiv.style.width = '300px';
 testDiv.style.height = '10px';
 
 // General Constants and Values
-const W = 25*16;
-const H = 25*16;
-const MAX_TILE = 25*8;
-const MIN_TILE = 25;
-const DIVISION_PROB = 0.3;
-const PREFER_INSIDE = false;
+const W = 1000;
+const H = 500;
+const MAX_TILE = 200;
+const MIN_TILE = 40;
+const DIVISION_PROB = 0.5;
+const PREFER_INSIDE = true;
 const MAIN_IMAGE_RECT = {
   x: 0,
   y: 0,
@@ -20,12 +20,12 @@ const MAIN_IMAGE_RECT = {
   h: MAX_TILE
 };
 const MAIN_IMAGE_ALPHA = 0.8;
-let CUR_ALPHA = MAIN_IMAGE_ALPHA;
+let CUR_ALPHA;
 
-const TONE_LIM = 40;
-const INTERVAL = 4000;
-const FADE_TIME = 1000;
-const FPS = 8;
+const TONE_LIM = 20;
+const INTERVAL = 5000;
+const FADE_TIME = 2000;
+const FPS = 60;
 
 canvas.width = W;
 canvas.height = H;
@@ -58,18 +58,13 @@ function loadImages(){
 }
 
 function setupComponent(){
-  if(W % MIN_TILE !== 0 || H % MIN_TILE !== 0 || MAX_TILE % MIN_TILE !== 0){
-    throw Error('Component width and height and maximum tile size \
-      have to be a multiple of the minimum tile size!');
-  }
-  if(MAIN_IMAGE_RECT.w % MIN_TILE !== 0 || MAIN_IMAGE_RECT.w % MIN_TILE !== 0){
-    throw Error('Main image width and height have to be a multiple of \
-      the minimum tile size!');
-  }
-
   CURRENT = 0;
-  squares = [{ x: 0, y: 0, w: W, h: H}];
-  divideRecursive(squares[0]);
+  CUR_ALPHA = MAIN_IMAGE_ALPHA;
+  squares = getInitialSquares();
+
+  for(const sq of squares) 
+    divideRecursive(sq);
+
   squares = squares.filter(sq => !sq.remove);
   placeMainImage();
 
@@ -81,8 +76,6 @@ function setupComponent(){
 
   setTestDiv(colors[CURRENT]);
   setInterval(() => next(), INTERVAL);
-  //setTimeout(() => changeColor(getColor(0, 0, 255)), INTERVAL);
-  //setInterval(() => changeColor(getRandomColor()), INTERVAL);
 }
 
 function placeMainImage(){
@@ -101,6 +94,7 @@ function placeMainImage(){
 
   if(suitable.length > 0){
     sq = suitable[Math.floor(Math.random() * suitable.length)];
+    console.log('Suitable square: ', sq);
     MAIN_IMAGE_RECT.x = sq.x;
     MAIN_IMAGE_RECT.y = sq.y;
   }
@@ -115,7 +109,7 @@ function render(){
 
   if(PREV >= 0){ // transition happening
     // fading the previous image
-    ctx.globalAlpha = MAIN_IMAGE_ALPHA - CUR_ALPHA;
+    ctx.globalAlpha = Math.max(MAIN_IMAGE_ALPHA - CUR_ALPHA, 0);
     ctx.drawImage(images[PREV], MAIN_IMAGE_RECT.x, MAIN_IMAGE_RECT.y,
       MAIN_IMAGE_RECT.w, MAIN_IMAGE_RECT.h);
   }
@@ -127,8 +121,24 @@ function render(){
   ctx.globalAlpha = 1;
 }
 
+function getInitialSquares(){
+  squares = [];
+
+  const alongW = Math.ceil(W / MAX_TILE);
+  const alongH = Math.ceil(H / MAX_TILE);
+
+  for(let i = 0; i < alongW; i++){
+    for(let j = 0; j < alongH; j++){
+      squares.push(
+        { x: i * MAX_TILE, y: j * MAX_TILE, w: MAX_TILE, h: MAX_TILE });
+    }
+  }
+
+  return squares;
+}
+
 function divideRecursive(square){
-  if(square.w <= MIN_TILE || square.h <= MIN_TILE) return;
+  if(square.w / 2 <= MIN_TILE || square.h / 2 <= MIN_TILE) return;
   if(square.w <= MAX_TILE && Math.random() > DIVISION_PROB) return;
 
   const side = square.w / 2;
